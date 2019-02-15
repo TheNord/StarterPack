@@ -9,7 +9,10 @@ require 'vendor/autoload.php';
 
 ### Initialization
 
-$container = new Container();
+$builder = new DI\ContainerBuilder();
+$builder->addDefinitions('./config/container.php');
+
+$container = $builder->build();
 
 require 'config/container.php';
 

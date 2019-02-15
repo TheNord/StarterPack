@@ -5,52 +5,58 @@ use Core\Http\Router\Router;
 use Core\Http\Router\AuraRouterAdapter;
 use Aura\Router\RouterContainer;
 use Core\Application\Template\Extension\RouteExtension;
+use Symfony\Component\Dotenv\Dotenv;
 
 /** @var \DI\Container $container */
 
-$container->set('settings', [
-	'twig' => [
-        'template_path' => 'templates',
-        'cache_path' => 'storage/cache',
-    ],
+if (file_exists('.env')) {
+    (new Dotenv())->load('.env');
+} else {
+    throw new \Exception('You need to configure the env file');
+}
 
-    'database' => [
-    	'pdo' => [
-	        'name' => 'app',
-	        'host' => '127.0.0.1',
-	        'username' => 'root',
-	        'password' => '',
-	        'options' => [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION],
-   		],
-    ],
-]);
+return [
+	'settings' => [
+		'twig' => [
+	        'template_path' => 'templates',
+	        'cache_path' => 'storage/cache',
+	    ],
 
-$container->set(Renderer::class, function ($container) {
-	$settings = $container->get('settings')['twig'];
-		
-    $loader = new Twig_Loader_Filesystem($settings['template_path']);
-	$twig = new Twig_Environment($loader, [
-	    'cache' => $settings['cache_path'],
-	]);
+	    'database' => [
+	    	'pdo' => [
+		        'name' => getenv('DB_NAME'),
+		        'host' => getenv('DB_HOST'),
+		        'username' => getenv('DB_USERNAME'),
+		        'password' => getenv('DB_PASSWORD'),
+		        'options' => function () {
+		        	return [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION];
+		        },
+	   		],
+	    ],
+	],
 
-	$twig->addExtension($container->get(RouteExtension::class));
+	Renderer::class => function ($container) {
+		$settings = $container->get('settings')['twig'];
+			
+	    $loader = new Twig_Loader_Filesystem($settings['template_path']);
+		$twig = new Twig_Environment($loader, [
+		    'cache' => $settings['cache_path'],
+		]);
 
-	$renderer = new Renderer($twig);
+		$twig->addExtension($container->get(RouteExtension::class));
 
-    return $renderer;
-});
+		$renderer = new Renderer($twig);
 
-$container->set(\PDO::class, function ($container) {
-	$settings = $container->get('settings')['database']['pdo'];
+	    return $renderer;
+	},
 
-    $dsn = 'mysql:host=' . $settings['host'] . ';dbname=' . $settings['name'];
-	return new \PDO($dsn, $settings['username'], $settings['password'], $settings['options']); 
-});
+	\PDO::class => function ($container) {
+		$settings = $container->get('settings')['database']['pdo'];
+	    $dsn = 'mysql:host=' . $settings['host'] . ';dbname=' . $settings['name'];
+		return new \PDO($dsn, $settings['username'], $settings['password'], $settings['options']); 
+	},
 
-$container->set(Router::class, function ($container) {
-	return new AuraRouterAdapter($container->get(RouterContainer::class));
-});
-
-$container->set(RouterContainer::class, function ($container) {
-	return new RouterContainer();
-});
+	Router::class => function ($container) {
+		return new AuraRouterAdapter($container->get(RouterContainer::class));
+	},
+];
