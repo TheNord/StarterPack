@@ -6,6 +6,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Core\Application\Renderer;
 use App\ReadModel\PostReadRepository;
 use Zend\Diactoros\Response\EmptyResponse;
+use Core\Http\Exception\NotFoundException;
 
 class ShowAction
 {
@@ -21,7 +22,8 @@ class ShowAction
     public function handle(ServerRequestInterface $request)
     {
         if (!$post = $this->posts->find($request->getAttribute('id'))) {
-            return new EmptyResponse(404);
+            throw new NotFoundException("This post is not found.", 404);
+            
         }
 
         return $this->renderer->render('app/blog/show', [

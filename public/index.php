@@ -11,12 +11,7 @@ require 'vendor/autoload.php';
 
 $builder = new DI\ContainerBuilder();
 $builder->addDefinitions('./config/container.php');
-
 $container = $builder->build();
-
-require 'config/container.php';
-
-$container->get(Core\Http\Router\Router::class);
 
 $app = new Application($container);
 

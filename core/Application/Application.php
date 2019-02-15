@@ -49,7 +49,9 @@ class Application
 		    $response = $action->handle($request);
 		} catch (RequestNotMatchedException $e){
 		    $response = new HtmlResponse('Undefined page', 404);
-		}
+		} catch (\Exception $e) {
+			$response = new HtmlResponse($e->getMessage(), $e->getCode());
+		} 
 
 		return $response;
 	}
