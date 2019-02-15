@@ -2,7 +2,7 @@
 
 use Core\Http\ResponseSender;
 use Core\Application\Application;
-use DI\Container;
+use Zend\Diactoros\ServerRequestFactory;
 
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
@@ -21,7 +21,8 @@ require 'config/routes.php';
 
 ### Running
 
-$response = $app->run();
+$request = ServerRequestFactory::fromGlobals();
+$response = $app->run($request);
 
 ### Sending
 

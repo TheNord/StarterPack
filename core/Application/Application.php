@@ -3,12 +3,12 @@
 namespace Core\Application;
 
 use Zend\Diactoros\Response\HtmlResponse;
-use Zend\Diactoros\ServerRequestFactory;
 use Core\Http\ActionResolver;
 use Core\Http\Router\Router;
 use Core\Http\Router\Exception\RequestNotMatchedException;
 use Psr\Container\ContainerInterface;
 use Aura\Router\RouterContainer;
+use Psr\Http\Message\ServerRequestInterface;
 
 class Application
 {
@@ -35,11 +35,10 @@ class Application
 		$this->routeMap->post($name, $url, $action)->tokens($tokens);
 	}
 
-	public function run() 
+	public function run(ServerRequestInterface $request) 
 	{
 		$resolver = new ActionResolver($this->container);
-
-		$request = ServerRequestFactory::fromGlobals();
+		
 		try {
 		    $result = $this->router->match($request);
 		    foreach ($result->getAttributes() as $attribute => $value) {
